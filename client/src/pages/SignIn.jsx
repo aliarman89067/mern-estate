@@ -1,10 +1,17 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  loadingStart,
+  loadingSuccess,
+  loadingFailure,
+} from "../redux/user/userSlice";
 
 export default function SignIn() {
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
+
   const [formData, setFormData] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
 
@@ -16,7 +23,7 @@ export default function SignIn() {
   }
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
+    dispatch(loadingStart());
     if (formData.email && formData.password) {
       try {
         const res = await fetch("/api/auth/signin", {
@@ -28,16 +35,13 @@ export default function SignIn() {
         });
         const data = await res.json();
         if (data.success === false) {
-          setError(data.message);
-          setLoading(false);
+          dispatch(loadingFailure(data.message));
           return;
         }
-        setError(null);
-        setLoading(false);
+        dispatch(loadingSuccess(data));
         navigate("/");
       } catch (error) {
-        setError(error.message);
-        setLoading(false);
+        dispatch(loadingFailure(error.message));
       }
     } else {
       alert("Please Fill All tThe Inputs");
@@ -62,7 +66,7 @@ export default function SignIn() {
           onChange={handleSignUp}
         />
         <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80">
-          {loading ? "Loading.." : "Sign In"}
+          {user.loading ? "Loading.." : "Sign In"}
         </button>
       </form>
       <div className="flex justify-center gap-2 mt-5">
@@ -71,7 +75,7 @@ export default function SignIn() {
           Sign up
         </Link>
       </div>
-      <p className="text-red-500">{error}</p>
+      <p className="text-red-500">{user.error}</p>
     </div>
   );
 }
