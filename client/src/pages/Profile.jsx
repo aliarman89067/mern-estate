@@ -7,6 +7,9 @@ import {
   deleteFailure,
   deleteStart,
   deleteSuccess,
+  signoutStart,
+  signoutSuccess,
+  signoutFailure,
 } from "../redux/user/userSlice";
 import {
   getDownloadURL,
@@ -78,7 +81,7 @@ export default function Profile() {
       dispatch(updateFailure(error.message));
     }
   };
-  async function handleClick(e) {
+  async function handleDeleteClick(e) {
     e.preventDefault();
     dispatch(deleteStart());
     try {
@@ -92,6 +95,20 @@ export default function Profile() {
       dispatch(deleteSuccess(data));
     } catch (error) {
       dispatch(deleteFailure(error.message));
+    }
+  }
+  async function handleLogoutClick(e) {
+    e.preventDefault();
+    dispatch(signoutStart());
+    try {
+      const res = await fetch("/api/auth/signout");
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(signoutFailure(data.message));
+      }
+      dispatch(signoutSuccess());
+    } catch (error) {
+      dispatch(signoutFailure(error.message));
     }
   }
   return (
@@ -153,10 +170,18 @@ export default function Profile() {
         </button>
       </form>
       <div className="flex justify-between mt-5">
-        <span onClick={handleClick} className="text-red-700 cursor-pointer">
+        <span
+          onClick={handleDeleteClick}
+          className="text-red-700 cursor-pointer"
+        >
           Delete Account
         </span>
-        <span className="text-red-700 cursor-pointer">Sign out</span>
+        <span
+          onClick={handleLogoutClick}
+          className="text-red-700 cursor-pointer"
+        >
+          Sign out
+        </span>
       </div>
       <p className="text-red-700 mt-5">{error ? error : ""}</p>
       <p className="text-green-700 mt-5">
