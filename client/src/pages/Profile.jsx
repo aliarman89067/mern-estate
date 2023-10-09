@@ -30,6 +30,7 @@ export default function Profile() {
   const [success, setSuccess] = useState(false);
   const [showListingError, setShowListingError] = useState(false);
   const [userListings, setUserListings] = useState([]);
+  const [loadingListings, setloadingListings] = useState(false);
 
   const { currentUser, loading, error } = useSelector((state) => state.user);
   useEffect(() => {
@@ -116,18 +117,36 @@ export default function Profile() {
   }
   async function handleShowListing() {
     try {
+      setloadingListings(true);
       setShowListingError(false);
       const res = await fetch("/api/user/listings/" + currentUser._id);
       const data = await res.json();
       if (data.success == false) {
-        setShowListingError(true);
+        setShowListingError(data.message);
+        setloadingListings(false);
         return;
       }
+      setloadingListings(false);
       setUserListings(data);
     } catch (error) {
-      setShowListingError(true);
+      setloadingListings(false);
+      setShowListingError(error.message);
     }
   }
+  const handleListingDelete = async (listingId) => {
+    try {
+      const res = await fetch(`api/listing/delete/${listingId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success == false) {
+        setShowListingError(data.message);
+      }
+      setUserListings((prev) => prev.filter((list) => list._id !== listingId));
+    } catch (error) {
+      setShowListingError(error.message);
+    }
+  };
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
@@ -210,9 +229,19 @@ export default function Profile() {
       <p className="text-green-700 mt-5">
         {success ? "User Updated Successfully" : ""}
       </p>
-      <button onClick={handleShowListing} className="text-green-700 w-full">
-        Show Listings
-      </button>
+      {userListings.length < 1 && (
+        <button onClick={handleShowListing} className="text-green-700 w-full">
+          {loadingListings ? "Load Listings.." : "Show Listings"}
+        </button>
+      )}
+      {userListings.length > 0 && (
+        <button
+          onClick={() => setUserListings([])}
+          className="text-green-700 w-full"
+        >
+          Hide Listings
+        </button>
+      )}
       {showListingError && (
         <p className="text-red-700 mt-5">{showListingError}</p>
       )}
@@ -231,7 +260,7 @@ export default function Profile() {
                 <img
                   src={listing.imageUrl[0]}
                   alt="Listing Image"
-                  className="h-16 w-16 object-contain rounded-lg"
+                  className="h-16 w-16 object-cover rounded-lg"
                 />
               </Link>
               <Link
@@ -241,7 +270,12 @@ export default function Profile() {
                 <p>{listing.name}</p>
               </Link>
               <div className="flex flex-col items-center">
-                <button className="text-red-700 uppercase">Delete</button>
+                <button
+                  onClick={() => handleListingDelete(listing._id)}
+                  className="text-red-700 uppercase"
+                >
+                  Delete
+                </button>
                 <button className="text-green-700 uppercase">Edit</button>
               </div>
             </div>
