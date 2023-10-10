@@ -41,3 +41,12 @@ export const updateListing = async (req, res, next) => {
     next(error);
   }
 };
+export const fetchListing = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const listingDoc = await Listing.findById(id);
+    res.json(listingDoc);
+  } catch (error) {
+    next(error);
+  }
+};
