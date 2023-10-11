@@ -32,15 +32,19 @@ export default function UpdateListing() {
   });
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [waitLoading, setWaitLoading] = useState(false);
 
   useEffect(() => {
     const fetchListing = async () => {
+      setWaitLoading(true);
       const res = await fetch("/api/listing/getListing/" + id);
       const data = await res.json();
       if (data.success === false) {
         console.log(data.message);
+        setWaitLoading(false);
         return;
       }
+      setWaitLoading(false);
       setFormData(data);
     };
     fetchListing();
@@ -148,6 +152,9 @@ export default function UpdateListing() {
       setError(error.message);
       setLoading(false);
     }
+  }
+  if (waitLoading) {
+    return <p className="text-center my-7 text-2xl">Loading...</p>;
   }
   return (
     <main className="p-3 max-w-4xl mx-auto">
